@@ -17,12 +17,17 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
   int _elapsedSeconds = 0;
   RunState _runState = RunState.idle;
   Position? _currentPosition;
+  List<Position> _route = [];
+  double _totalDistanceMeters = 0.0;
   StreamSubscription<Position>? _positionStreamSubscription;
 
   Future<void> _startRun() async {
     setState(() {
       _runState = RunState.running;
       _elapsedSeconds = 0;
+      _route = [];
+      _totalDistanceMeters = 0.0;
+      _currentPosition = null;
     });
 
     // Request permission and start location updates if allowed.
@@ -69,6 +74,8 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
     setState(() {
       _runState = RunState.idle;
       _elapsedSeconds = 0;
+      _route = [];
+      _totalDistanceMeters = 0.0;
       _currentPosition = null;
     });
   }
@@ -122,6 +129,18 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
           position,
         ) {
           setState(() {
+            if (_route.isNotEmpty) {
+              final previousPosition = _route.last;
+              final segmentDistance = Geolocator.distanceBetween(
+                previousPosition.latitude,
+                previousPosition.longitude,
+                position.latitude,
+                position.longitude,
+              );
+              _totalDistanceMeters += segmentDistance;
+            }
+
+            _route.add(position);
             _currentPosition = position;
           });
         });
@@ -140,6 +159,10 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
+  String _formatDistance(double meters) {
+    return '${(meters / 1000).toStringAsFixed(2)} km';
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -156,7 +179,10 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
         child: Column(
           children: [
             const SizedBox(height: 40),
-            _StatItem(label: 'Distance', value: '0.00 km'),
+            _StatItem(
+              label: 'Distance',
+              value: _formatDistance(_totalDistanceMeters),
+            ),
             const Divider(height: 40),
             _StatItem(
               label: 'Duration',
