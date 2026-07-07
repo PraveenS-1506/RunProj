@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../models/run.dart';
+import '../services/run_storage.dart';
+
 class RunTrackingPage extends StatefulWidget {
   const RunTrackingPage({super.key});
 
@@ -13,6 +16,8 @@ class RunTrackingPage extends StatefulWidget {
 enum RunState { idle, running, paused }
 
 class _RunTrackingPageState extends State<RunTrackingPage> {
+  final RunStorage _runStorage = RunStorage();
+
   Timer? _timer;
   int _elapsedSeconds = 0;
   RunState _runState = RunState.idle;
@@ -68,9 +73,22 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
     });
   }
 
-  void _stopRun() {
+  Future<void> _stopRun() async {
     _timer?.cancel();
     _stopLocationUpdates();
+
+    if (_elapsedSeconds > 0 && _totalDistanceMeters > 0) {
+      final completedRun = Run.completed(
+        date: DateTime.now(),
+        durationInSeconds: _elapsedSeconds,
+        distanceInMeters: _totalDistanceMeters,
+      );
+
+      if (completedRun.isValid) {
+        await _runStorage.addRun(completedRun);
+      }
+    }
+
     setState(() {
       _runState = RunState.idle;
       _elapsedSeconds = 0;
@@ -246,7 +264,7 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
                     child: SizedBox(
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: _stopRun,
+                        onPressed: () => _stopRun(),
                         child: const Text(
                           'STOP',
                           style: TextStyle(fontSize: 18, letterSpacing: 1.2),
