@@ -14,7 +14,9 @@ class RunStorage {
 
   Future<List<Run>> getRuns() async {
     final box = await openBox();
-    return box.values.toList();
+    final runs = box.values.toList();
+    runs.sort((a, b) => b.date.compareTo(a.date));
+    return runs;
   }
 
   Future<void> addRun(Run run) async {
