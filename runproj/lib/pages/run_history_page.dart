@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/run.dart';
 import '../services/run_storage.dart';
+import '../utils/run_formatters.dart';
+import 'run_details_page.dart';
 
 class RunHistoryPage extends StatefulWidget {
   const RunHistoryPage({super.key, this.initialRunsFuture});
@@ -44,34 +46,6 @@ class _RunHistoryPageState extends State<RunHistoryPage>
     setState(() {
       _runsFuture = _runStorage.getRuns();
     });
-  }
-
-  String _formatDate(DateTime date) {
-    final localDate = date.toLocal();
-    return '${localDate.day.toString().padLeft(2, '0')}/${localDate.month.toString().padLeft(2, '0')}/${localDate.year} ${localDate.hour.toString().padLeft(2, '0')}:${localDate.minute.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDistance(double meters) {
-    return '${(meters / 1000).toStringAsFixed(2)} km';
-  }
-
-  String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final remainingSeconds = seconds % 60;
-
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  }
-
-  String _formatPace(double averagePace) {
-    if (averagePace <= 0) {
-      return '--:--';
-    }
-
-    final minutes = averagePace.floor();
-    final seconds = ((averagePace - minutes) * 60).round();
-
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -120,43 +94,57 @@ class _RunHistoryPageState extends State<RunHistoryPage>
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final run = runs[index];
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _formatDate(run.date),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _RunDetailItem(
-                              label: 'Distance',
-                              value: _formatDistance(run.distanceInMeters),
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (context) => RunDetailsPage(run: run),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          RunFormatters.formatDate(run.date),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _RunDetailItem(
+                                label: 'Distance',
+                                value: RunFormatters.formatDistance(
+                                  run.distanceInMeters,
+                                ),
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: _RunDetailItem(
-                              label: 'Duration',
-                              value: _formatDuration(run.durationInSeconds),
+                            Expanded(
+                              child: _RunDetailItem(
+                                label: 'Duration',
+                                value: RunFormatters.formatDuration(
+                                  run.durationInSeconds,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      _RunDetailItem(
-                        label: 'Avg Pace',
-                        value: _formatPace(run.averagePace),
-                      ),
-                    ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _RunDetailItem(
+                          label: 'Avg Pace',
+                          value: RunFormatters.formatPace(run.averagePace),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
