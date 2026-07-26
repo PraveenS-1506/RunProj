@@ -37,6 +37,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   geolocator: ^9.0.2
+  
+  # Mapping dependencies
+  flutter_map: ^7.0.0  # OpenStreetMap integration
+  latlong2: ^0.9.1    # LatLng type for map coordinates
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,7 @@ void main() {
       date: DateTime(2024, 1, 2, 13, 45),
       durationInSeconds: 3661,
       distanceInMeters: 5000,
+      route: [],
     );
 
     await tester.pumpWidget(MaterialApp(home: RunDetailsPage(run: run)));

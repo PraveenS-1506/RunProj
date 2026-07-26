@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../models/run.dart';
+import '../models/run_location.dart';
 import '../services/run_storage.dart';
 
 class RunTrackingPage extends StatefulWidget {
@@ -22,7 +23,7 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
   int _elapsedSeconds = 0;
   RunState _runState = RunState.idle;
   Position? _currentPosition;
-  List<Position> _route = [];
+  List<RunLocation> _route = [];
   double _totalDistanceMeters = 0.0;
   StreamSubscription<Position>? _positionStreamSubscription;
 
@@ -82,6 +83,7 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
         date: DateTime.now(),
         durationInSeconds: _elapsedSeconds,
         distanceInMeters: _totalDistanceMeters,
+        route: _route,
       );
 
       if (completedRun.isValid) {
@@ -140,7 +142,7 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
     _positionStreamSubscription?.cancel();
     const settings = LocationSettings(
       accuracy: LocationAccuracy.best,
-      distanceFilter: 0,
+      distanceFilter: 5,
     );
     _positionStreamSubscription =
         Geolocator.getPositionStream(locationSettings: settings).listen((
@@ -148,17 +150,22 @@ class _RunTrackingPageState extends State<RunTrackingPage> {
         ) {
           setState(() {
             if (_route.isNotEmpty) {
-              final previousPosition = _route.last;
+              final previousLocation = _route.last;
               final segmentDistance = Geolocator.distanceBetween(
-                previousPosition.latitude,
-                previousPosition.longitude,
+                previousLocation.latitude,
+                previousLocation.longitude,
                 position.latitude,
                 position.longitude,
               );
               _totalDistanceMeters += segmentDistance;
             }
 
-            _route.add(position);
+            _route.add(
+              RunLocation(
+                latitude: position.latitude,
+                longitude: position.longitude,
+              ),
+            );
             _currentPosition = position;
           });
         });

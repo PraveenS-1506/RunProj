@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import '../models/run.dart';
+import '../models/run_location.dart';
 
 class RunStorage {
   static const String _boxName = 'runs';
@@ -7,6 +8,9 @@ class RunStorage {
   Future<Box<Run>> openBox() async {
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(RunAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(RunLocationAdapter());
     }
 
     return Hive.openBox<Run>(_boxName);
